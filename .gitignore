@@ -1,0 +1,6 @@
+dependency-reduced-pom.xml
+papermc.jar
+.DS_Store
+target/
+.idea/
+
