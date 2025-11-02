@@ -12,7 +12,9 @@ Supported options:
 - -p / --mc-version: Paper server version to download (latest by default).
 - -b / --mc-build: Paper server build number to download (latest by default).
 - -o / --out: Path where the paper JAR file will be downloaded.
-- -d / --dry-run: If set no real download will be performed.
+- -d / --dry-run: If set, no real download will be performed.
+- -w / --overwrite: If set a previously downloaded JAR file will be overwritten.
+- -h / --help: Display the command help message.
 
 If no version or build is specified using the command option you still can use environment variables to define them:
 - MC_VERSION: Paper server version to download (latest by default).

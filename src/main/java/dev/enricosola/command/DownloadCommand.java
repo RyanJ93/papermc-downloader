@@ -4,6 +4,7 @@ import dev.enricosola.service.PaperAPIService;
 import java.util.concurrent.Callable;
 import dev.enricosola.entity.Version;
 import dev.enricosola.entity.Build;
+import dev.enricosola.util.FileUtils;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import java.util.TreeMap;
@@ -18,8 +19,6 @@ public class DownloadCommand implements Callable<Integer> {
     private static final String VERSION_ENV_VAR_NAME = "MC_VERSION";
     private static final String BUILD_ENV_VAR_NAME = "MC_BUILD";
 
-    private static final String DEFAULT_OUTPUT = "./papermc.jar";
-
     @Option(names = {"-p", "--mc-version"}, description = "Paper server version to download (latest by default).")
     private String MCVersion = null;
 
@@ -27,7 +26,10 @@ public class DownloadCommand implements Callable<Integer> {
     private Integer MCBuild = null;
 
     @Option(names = {"-o", "--out"}, description = "Path where the paper JAR file will be downloaded.")
-    private String output = DownloadCommand.DEFAULT_OUTPUT;
+    private String output = null;
+
+    @Option(names = {"-w", "--overwrite"}, description = "If set previously downloaded JAR file will be overwritten.")
+    private boolean overwrite = false;
 
     @Option(names = {"-d", "--dry-run"}, description = "If set no real download will be performed.")
     private boolean dryRun = false;
@@ -43,14 +45,19 @@ public class DownloadCommand implements Callable<Integer> {
     public Integer call() {
         Version version = this.getVersion();
         Build build = this.getBuild(version);
+        String path = FileUtils.buildPath(this.output, version, build);
         IO.println("Downloading PaperMC server version " + version.getId() + " build " + build.getId() + "...");
-        IO.println(String.format("Saving to \"%s\"...", this.output));
-        if (this.dryRun) {
-            IO.println("Dry-run on, no real download will be performed!");
+        if (!this.overwrite && FileUtils.exists(path)) {
+            IO.println(String.format("File \"%s\" already exists, skipping download!", path));
         } else {
-            new PaperAPIService().downloadBuild(build, this.output);
+            IO.println(String.format("Saving to \"%s\"...", path));
+            if (this.dryRun) {
+                IO.println("Dry-run on, no real download will be performed!");
+            } else {
+                new PaperAPIService().downloadBuild(build, path);
+            }
+            IO.println("Download completed!");
         }
-        IO.println("Download completed!");
         return 0;
     }
 

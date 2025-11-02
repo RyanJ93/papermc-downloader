@@ -1,5 +1,5 @@
 dependency-reduced-pom.xml
-papermc.jar
+papermc*.jar
 .DS_Store
 target/
 .idea/

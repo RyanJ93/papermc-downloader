@@ -4,13 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import dev.enricosola.exception.PaperAPIException;
 import com.fasterxml.jackson.databind.*;
+import dev.enricosola.util.FileUtils;
 import dev.enricosola.entity.Version;
 import dev.enricosola.entity.Build;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
 import java.net.http.HttpClient;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.TreeMap;
 import java.util.List;
@@ -71,11 +71,12 @@ public class PaperAPIService {
      * @param destinationPath A string representing the local file path where the downloaded build will be saved.
      * @throws PaperAPIException If an HTTP request error or I/O operation failure occurs during the download process.
      * @throws PaperAPIException If the response status code is not 200 (OK) when retrieving the build.
+     * @throws RuntimeException If an I/O error occurs while attempting to delete the file.
      */
     public void downloadBuild(Build build, String destinationPath) {
         URI uri = URI.create(build.getDownloadUrl());
         Path destination = Path.of(destinationPath);
-        this.cleanupDownload(destination);
+        FileUtils.cleanup(destinationPath);
         try (HttpClient httpClient = HttpClient.newHttpClient()) {
             HttpRequest httpRequest = HttpRequest.newBuilder().uri(uri).build();
             HttpResponse<Path> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofFile(destination));
@@ -109,23 +110,6 @@ public class PaperAPIService {
             return httpResponse.body();
         } catch (IOException | InterruptedException ex) {
             throw new PaperAPIException("An error occurred while sending the request to " + url, ex);
-        }
-    }
-
-    /**
-     * Deletes the specified file if it exists in the filesystem. This method is typically
-     * used to clean up a previously downloaded file that may need to be replaced or deleted.
-     *
-     * @param destination the path of the file to be deleted.
-     * @throws PaperAPIException if an I/O error occurs while attempting to delete the file.
-     */
-    private void cleanupDownload(Path destination) {
-        if (Files.exists(destination)) {
-            try {
-                Files.delete(destination);
-            } catch (IOException ex) {
-                throw new PaperAPIException("Unable to delete previously downloaded file.", ex);
-            }
         }
     }
 }
