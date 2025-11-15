@@ -6,6 +6,7 @@ import dev.enricosola.exception.PaperAPIException;
 import com.fasterxml.jackson.databind.*;
 import dev.enricosola.util.FileUtils;
 import dev.enricosola.entity.Version;
+import com.vdurmont.semver4j.Semver;
 import dev.enricosola.entity.Build;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
@@ -24,16 +25,17 @@ public class PaperAPIService {
      * Fetches a list of Minecraft server versions from the PaperMC API.
      *
      * @return a {@link TreeMap} with version IDs as keys and corresponding {@link Version} objects as values.
-     * @throws PaperAPIException if there is an issue with parsing the API response or the API request fails.
+     * @throws PaperAPIException if there is an issue with parsing, the API response or the API request fails.
      */
-    public TreeMap<String, Version> fetchVersions() {
+    public TreeMap<Semver, Version> fetchVersions() {
         try {
-            TreeMap<String, Version> versions = new TreeMap<>();
+            TreeMap<Semver, Version> versions = new TreeMap<>();
             String json = this.sendJSONRequest(PaperAPIService.VERSION_LIST_ENDPOINT);
             new ObjectMapper().readTree(json).get("versions").forEach(innerJsonNode -> {
                 String versionId = innerJsonNode.at("/version/id").asText();
+                Semver versionNumber = new Semver(versionId, Semver.SemverType.LOOSE);
                 List<Integer> buildList = new ObjectMapper().convertValue(innerJsonNode.at("/builds"), new TypeReference<>() {});
-                versions.put(versionId, new Version(versionId, buildList));
+                versions.put(versionNumber, new Version(versionNumber, buildList));
             });
             return versions;
         } catch (JsonProcessingException ex) {
@@ -44,15 +46,15 @@ public class PaperAPIService {
     /**
      * Fetches a list of builds for a specific Minecraft server version from the PaperMC API.
      *
-     * @param versionId The ID of the Minecraft server version for which the builds are to be retrieved.
+     * @param versionNumber The ID of the Minecraft server version for which the builds are to be retrieved.
      * @return A {@link TreeMap} where the keys are build IDs (integers) and the values are {@link Build} objects
      *         containing details of each build, including the build ID and download URL.
-     * @throws PaperAPIException If there is an issue with parsing the API response or the API request fails.
+     * @throws PaperAPIException If there is an issue with parsing, the API response or the API request fails.
      */
-    public TreeMap<Integer, Build> fetchBuild(String versionId) {
+    public TreeMap<Integer, Build> fetchBuild(Semver versionNumber) {
         try {
             TreeMap<Integer, Build> builds = new TreeMap<>();
-            String json = this.sendJSONRequest(String.format(PaperAPIService.BUILD_LIST_ENDPOINT, versionId));
+            String json = this.sendJSONRequest(String.format(PaperAPIService.BUILD_LIST_ENDPOINT, versionNumber));
             new ObjectMapper().readTree(json).forEach(buildNode -> {
                 String downloadUrl = buildNode.at("/downloads/server:default/url").asText();
                 int buildId = buildNode.at("/id").asInt();

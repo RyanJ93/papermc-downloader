@@ -3,8 +3,9 @@ package dev.enricosola.command;
 import dev.enricosola.service.PaperAPIService;
 import java.util.concurrent.Callable;
 import dev.enricosola.entity.Version;
-import dev.enricosola.entity.Build;
 import dev.enricosola.util.FileUtils;
+import com.vdurmont.semver4j.Semver;
+import dev.enricosola.entity.Build;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import java.util.TreeMap;
@@ -46,7 +47,7 @@ public class DownloadCommand implements Callable<Integer> {
         Version version = this.getVersion();
         Build build = this.getBuild(version);
         String path = FileUtils.buildPath(this.output, version, build);
-        IO.println("Downloading PaperMC server version " + version.getId() + " build " + build.getId() + "...");
+        IO.println("Downloading PaperMC server version " + version.getNumber() + " build " + build.getId() + "...");
         if (!this.overwrite && FileUtils.exists(path)) {
             IO.println(String.format("File \"%s\" already exists, skipping download!", path));
         } else {
@@ -72,9 +73,11 @@ public class DownloadCommand implements Callable<Integer> {
         String selectedVersion = this.MCVersion == null || this.MCVersion.isBlank() ?
                 System.getenv(DownloadCommand.VERSION_ENV_VAR_NAME) :
                 this.MCVersion;
-        TreeMap<String, Version> versions = new PaperAPIService().fetchVersions();
-        Version version = selectedVersion == null || selectedVersion.isBlank() ?
-                versions.firstEntry().getValue() : versions.get(selectedVersion);
+        TreeMap<Semver, Version> versions = new PaperAPIService().fetchVersions();
+        Version version = versions.lastEntry().getValue();
+        if ( selectedVersion != null && !selectedVersion.isBlank() ) {
+            version = versions.get(new Semver(selectedVersion, Semver.SemverType.LOOSE));
+        }
         if ( version == null ) {
             IO.println("Unknown Minecraft server version, aborting.");
             System.exit(1);
@@ -95,7 +98,7 @@ public class DownloadCommand implements Callable<Integer> {
                 String selectedBuildStr = System.getenv(DownloadCommand.BUILD_ENV_VAR_NAME);
                 selectedBuild = selectedBuildStr == null || selectedBuildStr.isBlank() ? null : Integer.parseInt(selectedBuildStr);
             }
-            TreeMap<Integer, Build> builds = new PaperAPIService().fetchBuild(version.getId());
+            TreeMap<Integer, Build> builds = new PaperAPIService().fetchBuild(version.getNumber());
             Build build = selectedBuild == null ? builds.firstEntry().getValue() : builds.get(selectedBuild);
             if ( build == null ) {
                 IO.println("Unknown Minecraft server version, aborting.");

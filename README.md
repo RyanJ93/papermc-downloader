@@ -16,7 +16,7 @@ Supported options:
 - -w / --overwrite: If set a previously downloaded JAR file will be overwritten.
 - -h / --help: Display the command help message.
 
-If no version or build is specified using the command option you still can use environment variables to define them:
+If no version or build is specified using the command option, you still can use environment variables to define them:
 - MC_VERSION: Paper server version to download (latest by default).
 - MC_BUILD: Paper server build number to download (latest by default).
 

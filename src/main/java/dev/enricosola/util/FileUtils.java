@@ -18,7 +18,7 @@ public class FileUtils {
      * @return A string representing the file name in the format "papermc_<version_id>-<build_id>.jar".
      */
     public static String buildFileName(Version version, Build build) {
-        return String.format(FileUtils.BASE_FILE_TEMPLATE, version.getId(), build.getId());
+        return String.format(FileUtils.BASE_FILE_TEMPLATE, version.getNumber(), build.getId());
     }
 
     /**
