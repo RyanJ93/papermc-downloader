@@ -63,6 +63,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>papermc-downloader</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>dev.enricosola.PaperMCDownloader</mainClass>

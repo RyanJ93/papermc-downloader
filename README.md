@@ -29,7 +29,7 @@ To build the application, run this command in the project root directory:
 mvn package
 ```
 
-Now you can find the compiled jar file in the `target` directory.
+Now you can find the compiled jar file in the `target` directory (named `papermc-downloader.jar`).
 
 ## License
 
